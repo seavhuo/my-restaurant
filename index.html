@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title> Food Menu</title>
+<style>
+  /* Optional inline CSS for animation (if you don’t have it in style.css) */
+    .food-card {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.5s forwards;
+    }
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  /* Reset & basics */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f5f5;
+    color: #222;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  h1, h2 {
+    text-align: center;
+    margin-top: 1rem;
+  }
+  /* Dark mode styles */
+  body.dark {
+    background-color: #121212;
+    color: #eee;
+  }
+  /* Container */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 2rem 3rem;
+  }
+  /* Toggle Button */
+  .toggle-theme {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    background: linear-gradient(45deg, #ff6f61, #ffb347);
+    border: none;
+    color: #fff;
+    font-weight: bold;
+    padding: 0.6rem 1.2rem;
+    border-radius: 25px;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(255,111,97,0.7);
+    transition: background 0.3s;
+    z-index: 1000;
+  }
+  .toggle-theme:hover {
+    background: linear-gradient(45deg, #ffb347, #ff6f61);
+  }
+  /* Category filter */
+  .categories {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  .category-btn {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    background-color: #ff6f61;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 3px 6px rgba(255,111,97,0.5);
+    transition: background-color 0.3s, transform 0.2s;
+  }
+  .category-btn:hover, .category-btn.active {
+    background-color: #ffb347;
+    color: #222;
+    transform: scale(1.1);
+  }
+  body.dark .category-btn {
+    background-color: #bb4d3b;
+    color: #eee;
+    box-shadow: 0 3px 6px rgba(187,77,59,0.7);
+  }
+  body.dark .category-btn:hover, body.dark .category-btn.active {
+    background-color: #d97b49;
+    color: #121212;
+  }
+  /* Menu Grid */
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(280px,1fr));
+    gap: 1.5rem;
+  }
+  .menu-item {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgb(0 0 0 / 0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.3s;
+    cursor: default;
+  }
+  .menu-item:hover {
+    box-shadow: 0 10px 18px rgb(255 111 97 / 0.5);
+  }
+  body.dark .menu-item {
+    background: #1e1e1e;
+    box-shadow: 0 6px 12px rgb(255 111 97 / 0.3);
+  }
+  body.dark .menu-item:hover {
+    box-shadow: 0 10px 18px rgb(255 180 71 / 0.7);
+  }
+  .menu-item img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+  .menu-item:hover img {
+    transform: scale(1.1);
+  }
+  .menu-content {
+    padding: 1rem 1.2rem 1.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .menu-content h3 {
+    margin: 0 0 0.5rem;
+    color: #ff6f61;
+    transition: color 0.3s;
+  }
+  body.dark .menu-content h3 {
+    color: #ffb347;
+  }
+  .menu-content p {
+    flex-grow: 1;
+    font-size: 0.9rem;
+    color: #555;
+  }
+  body.dark .menu-content p {
+    color: #ccc;
+  }
+  .price {
+    margin-top: 1rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #ff6f61;
+    transition: color 0.3s;
+  }
+  body.dark .price {
+    color: #ffb347;
+  }
+  /* Responsive */
+  @media (max-width: 600px) {
+    .menu-item img {
+      height: 140px;
+    }
+  }
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 1rem 0;
+    font-size: 0.9rem;
+    color: #777;
+    border-top: 1px solid #ddd;
+    margin-top: 3rem;
+  }
+  body.dark footer {
+    color: #bbb;
+    border-color: #444;
+  }
+
+</style>
+</head>
+<body>
+<button class="toggle-theme" aria-label="Toggle dark/light theme">Dark Mode</button>
+
+<div class="container">
+  <h1>Food Menu</h1>
+
+  <div class="categories" role="group" aria-label="Filter menu categories">
+    <button class="category-btn active" data-category="all">All</button>
+    <button class="category-btn" data-category="appetizers">Appetizers</button>
+    <button class="category-btn" data-category="main-course">Main Course</button>
+    <button class="category-btn" data-category="desserts">Desserts</button>
+    <button class="category-btn" data-category="drinks">Drinks</button>
+     <button class="category-btn" data-category="New menu">New menu</button>
+  </div>
+
+  <section class="menu-grid" id="menuGrid" aria-live="polite" aria-label="Food menu items">
+    <!-- Menu items inserted here by JS -->
+  </section>
+</div>
+
+<footer>
+  ©  Enjoy your meal time.
+ <h2>📬 Contact Me</h2>
+   <p>Tel: <a href="studyabtcall.html">+855 92466616</a></p>
+    <p>Email: <a href="mailto:seavhuol@gmail.com">seavhuol@gamil.com</a></p>
+    <p>Phone number: <a href="callto:+855 92466616">+855 92466616</a></p>
+    <p>Map: <a href="https://maps.app.goo.gl/MhA93BgETUnpYnmj6?g_st=ac" target="_blank">In Battambang</a></p>
+ <p>fb: <a href="https://www.facebook.com/share/1DJqnCxu14/" target="_blank">ឡៅ​ ស៊ាវហ៊ួ</a></p>
+</footer>
+
+<script>
+  // Data for menu items
+  const menuItems = [
+    // Appetizers
+    {
+      id: 1,
+      name: "Bruschetta",
+      category: "appetizers",
+      desc: "Grilled bread with fresh tomatoes, basil, garlic, and olive oil.",
+      price: 6.99,
+      img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRR01GEQ5JYnwmrj0FTW8bCrpm-qjG8Fdjrfw&s"
+    },
+    {
+      id: 2,
+      name: "Stuffed Mushrooms",
+      category: "appetizers",
+      desc: "Mushrooms stuffed with cheese and herbs, baked to perfection.",
+      price: 7.99,
+      img: "https://thumbs.dreamstime.com/b/stuffed-mushrooms-cheese-herbs-baked-to-perfection-topped-creating-flavorful-delicious-dish-perfect-appetizer-364282511.jpg"
+    },
+    {
+      id: 3,
+      name: "Spring Rolls",
+      category: "appetizers",
+      desc: "Crispy rolls filled with vegetables and served with sweet chili sauce.",
+      price: 5.99,
+      img: "https://www.halfbakedharvest.com/wp-content/uploads/2021/12/Crispy-Sesame-Ginger-Egg-Rolls-with-Sweet-Chili-Sauce-3.jpg"
+    },
+    // Main Course
+    {
+      id: 4,
+      name: "Grilled Salmon",
+      category: "main-course",
+      desc: "Fresh salmon grilled with lemon butter sauce and herbs.",
+      price: 18.99,
+      img: "https://static01.nyt.com/images/2024/11/24/multimedia/Salmon-With-Lemon-Herb-Marinaderex-zcfp/Salmon-With-Lemon-Herb-Marinaderex-zcfp-videoSixteenByNineJumbo1600-v2.jpg"
+    },
+    {
+      id: 5,
+      name: "Margherita Pizza",
+      category: "main-course",
+      desc: "Classic pizza topped with tomatoes, mozzarella, and basil.",
+      price: 14.99,
+      img: "https://xoxobella.com/wp-content/uploads/2024/05/Homemade-Margherita-Pizza-2.jpg"
+    },
+    {
+      id: 6,
+      name: "Chicken Alfredo Pasta",
+      category: "main-course",
+      desc: "Creamy Alfredo sauce with grilled chicken and fettuccine pasta.",
+      price: 16.99,
+      img: "https://midwestfoodieblog.com/wp-content/uploads/2023/07/chicken-alfredo-1-2.jpg"
+    },
+    // Desserts
+    {
+      id: 7,
+      name: "Cheesecake",
+      category: "desserts",
+      desc: "Rich and creamy cheesecake with a graham cracker crust.",
+      price: 7.50,
+      img: "https://busycreatingmemories.com/wp-content/uploads/2024/04/DSC_5302.jpg"
+    },
+    {
+      id: 8,
+      name: "Chocolate Lava Cake",
+      category: "desserts",
+      desc: "Warm chocolate cake with a gooey molten center.",
+      price: 8.25,
+      img: "https://sallysbakingaddiction.com/wp-content/uploads/2017/02/lava-cake.jpg"
+    },
+    {
+      id: 9,
+      name: "Fruit Tart",
+      category: "desserts",
+      desc: "Fresh seasonal fruits on a creamy custard tart shell.",
+      price: 6.99,
+      img: "https://charlotteslivelykitchen.com/wp-content/uploads/2016/08/Strawberry-and-Custard-Tarts-11b.jpg"
+    },
+    // Drinks
+    {
+      id: 10,
+      name: "Mojito",
+      category: "drinks",
+      desc: "Refreshing cocktail with lime, mint, sugar, and rum.",
+      price: 9.50,
+      img: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgdO61uZ2YIFjR8XHA0ZrCwGxojbz4PVfuq_lrjYjJM2oSXYTwu-DzRMO8uvGRKI_GCesQRRs_T1JiKWCoz2En51BJjHSQJETp9HmcA-teMNi_gjzAKK205RApNWmdkCrouIC6vWZelMDU/s1600/Mojito-6621-websize-x500.jpg"
+    },
+    {
+      id: 11,
+      name: "Iced Coffee",
+      category: "drinks",
+      desc: "Cold brewed coffee served over ice with milk and sweetener.",
+      price: 4.99,
+      img: "https://cookieandkate.com/images/2018/09/cold-brew-coffee-tutorial-1100x1648.jpg"
+    },
+    {
+      id: 12,
+      name: "Fresh Lemonade",
+      category: "drinks",
+      desc: "Classic lemonade made with freshly squeezed lemons and sugar.",
+      price: 3.99,
+      img: "https://images.squarespace-cdn.com/content/v1/5ed13dd3465af021e2c1342b/a5b1e544-ee89-4268-b9af-ab49e9cc7006/IMG_1986+%281%29.jpg"
+    },
+     // New menu
+    {
+      id: 13,
+      name: "Amok (អាម៉ុក)",
+      category: "New menu",
+      desc: "Steamed fish curry in banana leaves.",
+      price: 0.99,
+      img: "https://www.adventureworld.com/blog/wp-content/uploads/sites/3/2025/05/Cambodia-Food-a-traditional-khmer-curry-of-Fish-amok-1024x683.jpeg"
+    },
+    {
+      id: 14,
+      name: "Sach Ang (សាច់អាំង)",
+      category: "New menu",
+      desc: "Grilled marinated meat, usually pork or beef.",
+      price: 6.99,
+      img: "https://kohsantepheap.tv/wp-content/uploads/2021/05/8Q3A2442.jpg"
+    },
+    {
+      id: 15,
+      name: "Nom Banh Chok (នំបញ្ចុក)",
+      category: "New menu",
+      desc: "Rice noodles with green curry sauce (often for breakfast).",
+      price: 0.50,
+      img: "https://kramapost.com/upload/media/entries/2020-08/23/817-entry-3-1598175107.jpg"
+    },
+    {
+      id: 13,
+      name: "Lok lak (ឡុកឡាក់)",
+      category: "New menu",
+      desc: "Stir-fried beef cubes served with rice and lime-pepper sauce.",
+      price: 2.99,
+      img: "https://spicygelato.kitchen/wp-content/uploads/2022/03/BeefLokLak-scaled.jpg"
+    },
+    {
+      id: 13,
+      name: "Cha Bay Bongkea (ឆាបាយបង្គា)",
+      category: "New menu",
+      desc: "Stir-fried rice with shrimp",
+      price: 3.50,
+      img: "https://img.freepik.com/premium-photo/shrimp-fried-rice-quick-easy-asian-cuisine-with-stirfried-rice-vegetables_875755-11108.jpg?w=360"
+    },
+    {
+      id: 13,
+      name: "火锅 - hotpot",
+      category: "New menu",
+      desc: "A bubbling pot of flavorful broth where you cook meats, vegetables, and noodles at the table.",
+      price: 5.50,
+      img: "https://static01.nyt.com/images/2019/08/27/dining/27REST-DAL-slide-N2XY/27REST-DAL-slide-N2XY-superJumbo.jpg"
+    }
+  ];
+
+  // DOM references
+  const menuGrid = document.getElementById("menuGrid");
+  const categoryButtons = document.querySelectorAll(".category-btn");
+  const toggleThemeBtn = document.querySelector(".toggle-theme");
+
+  // Render menu items filtered by category
+  function renderMenu(category = "all") 
+  {
+    menuGrid.innerHTML = "";
+
+    let filteredItems = category === "all"
+      ? menuItems
+      : menuItems.filter(item => item.category === category);
+
+    if (filteredItems.length === 0) {
+      menuGrid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; font-style:italic; color:#999;">
+        No items found in this category.</p>`;
+      return;
+    }
+
+    filteredItems.forEach(item => {
+      const itemDiv = document.createElement("article");
+      itemDiv.className = "menu-item";
+      itemDiv.setAttribute("tabindex", "0");
+      itemDiv.setAttribute("aria-label", `${item.name}, price $${item.price.toFixed(2)}. ${item.desc}`);
+
+      itemDiv.innerHTML = `
+        <img src="${item.img}" alt="${item.name}" loading="lazy" />
+        <div class="menu-content">
+          <h3>${item.name}</h3>
+          <p>${item.desc}</p>
+          <div class="price">$${item.price.toFixed(2)}</div>
+        </div>
+      `;
+      menuGrid.appendChild(itemDiv);
+    });
+  }
+
+  // Category buttons event
+  categoryButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      categoryButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderMenu(btn.getAttribute("data-category"));
+    });
+  });
+
+  // Dark/Light theme toggle
+  function setTheme(theme) {
+    if (theme === "dark") {
+      document.body.classList.add("dark");
+      toggleThemeBtn.textContent = "Light Mode";
+    } else {
+      document.body.classList.remove("dark");
+      toggleThemeBtn.textContent = "Dark Mode";
+    }
+    localStorage.setItem("theme", theme);
+  }
+
+  toggleThemeBtn.addEventListener("click", () => {
+    const currentTheme = document.body.classList.contains("dark") ? "dark" : "light";
+    setTheme(currentTheme === "dark" ? "light" : "dark");
+  });
+
+  // Load saved theme or default to light
+  const savedTheme = localStorage.getItem("theme") || "light";
+  setTheme(savedTheme);
+
+  // Initial render all menu items
+  renderMenu("all");
+  //hi
+ function searchFood() {
+  const input = document.getElementById("search").value.toLowerCase();
+  const cards = document.querySelectorAll(".food-card");
+
+  cards.forEach(card => {
+    const name = card.querySelector("h3").innerText.toLowerCase();
+    if (name.includes(input)) {
+      card.style.display = "block";
+    } else {
+      card.style.display = "none";
+    }
+  });
+}
+</script>
+<h1>hekkodsio</h1>
+</body>
+</html>
